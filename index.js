@@ -45,9 +45,10 @@ function now(){
     return (new Date).getTime();
 }
 
-function Quickling(selector, container){
+function Quickling(selector, container,option){
     var self = this;
 
+    self.option=option?option:{};
     self.selector = selector;
     self.container = $(container)[0];
     self.expires = 0;
@@ -122,6 +123,9 @@ Quickling.prototype = {
             self.isForce = false;
             self.loader = Pagelet.load(url, function(data, status){
                 self.loader = null;
+                if(self.option.beforeRender&&self.option.beforeRender(data,status)==false){
+                    return;
+                }
                 Pagelet.append(self.container, data);
                 self.caches[url] = {data: data, time: now()};
                 self.trigger('send:back', [data, status]);
@@ -164,12 +168,13 @@ Quickling.prototype = {
 
 var instance;
 
-return function(className, container){
+return function(className, container,option){
     if(instance){
         return instance;
     }
 
-    return instance = new Quickling(className, container);
+    return instance = new Quickling(className, container,option);
 };
 
 });
+
