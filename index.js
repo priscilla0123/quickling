@@ -1,8 +1,5 @@
 ;(function(factory){
-if(typeof define == 'function' && define.amd){
-    //seajs or requirejs environment
-    define(['jquery', 'class', 'overlay'], factory);
-}else if(typeof module === 'object' && typeof module.exports == 'object'){
+if(typeof module === 'object' && typeof module.exports == 'object'){
     module.exports = factory(
         require('router'),
         require('static/pagelet')
@@ -43,11 +40,11 @@ function attr(element, name, value){
 
 function now(){
     return (new Date).getTime();
-}
+} 
 
-function Quickling(selector, container){
-    var self = this;
-
+function Quickling(selector, container, option){
+    var self = this;  
+    self.option=option?option:{};
     self.selector = selector;
     self.container = $(container)[0];
     self.expires = 0;
@@ -55,10 +52,10 @@ function Quickling(selector, container){
     self.isForce = false;
     self.router = new Router();
     self.initEvent();
-    self.listen();
+    self.listen();  
 }
 
-Quickling.prototype = {
+Quickling.prototype = { 
     listen: function(container){
         var self = this;
         var elements = $(self.selector, container);
@@ -92,7 +89,7 @@ Quickling.prototype = {
             self.trigger('empty');
         });
 
-        self.router.listen('^!([\\s\\S]+)', function(hash){
+        self.router.listen('^!([\\s\\S]+)', function(hash){  
             self._loadByUrl(hash);
         });
     },
@@ -105,7 +102,7 @@ Quickling.prototype = {
         this.router.go('!' + url);
     },
 
-    _loadByUrl: function(hash){
+    _loadByUrl: function(hash){ 
         var url = hash.substr(1);
         var self = this;
 
@@ -121,7 +118,10 @@ Quickling.prototype = {
         ){
             self.isForce = false;
             self.loader = Pagelet.load(url, function(data, status){
-                self.loader = null;
+                self.loader = null; 
+                if(self.option.beforeRender&&self.option.beforeRender(data,status)==false){
+                    return;
+                }
                 Pagelet.append(self.container, data);
                 self.caches[url] = {data: data, time: now()};
                 self.trigger('send:back', [data, status]);
@@ -162,14 +162,13 @@ Quickling.prototype = {
     }
 };
 
-var instance;
-
-return function(className, container){
+var instance; 
+return function(className, container,option){
     if(instance){
         return instance;
     }
 
-    return instance = new Quickling(className, container);
+    return instance = new Quickling(className, container,option);
 };
 
 });
